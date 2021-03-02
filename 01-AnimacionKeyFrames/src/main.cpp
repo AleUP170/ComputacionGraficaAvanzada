@@ -51,6 +51,7 @@ Shader shaderMulLighting;
 std::shared_ptr<FirstPersonCamera> camera(new FirstPersonCamera());
 
 Sphere skyboxSphere(20, 20);
+Sphere sphere2(20, 20);
 Box boxCesped;
 Box boxWalls;
 Box boxHighway;
@@ -81,7 +82,7 @@ Model modelDartLegoRightHand;
 Model modelDartLegoLeftLeg;
 Model modelDartLegoRightLeg;
 
-GLuint textureCespedID, textureWallID, textureWindowID, textureHighwayID; //, textureLandingPadID;
+GLuint textureCespedID, textureWallID, textureWindowID, textureHighwayID, texturelandingPadID; //, textureLandingPadID;
 GLuint skyboxTextureID;
 
 GLenum types[6] = {
@@ -217,6 +218,11 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	skyboxSphere.init();
 	skyboxSphere.setShader(&shaderSkybox);
 	skyboxSphere.setScale(glm::vec3(20.0f, 20.0f, 20.0f));
+
+	sphere2.init();
+	sphere2.setShader(&shaderMulLighting);
+	sphere2.setScale(glm::vec3(3.0f, 3.0f, 3.0f));
+	sphere2.setPosition(glm::vec3(1.0f, 4.0f, -6.0f));
 
 	boxCesped.init();
 	boxCesped.setShader(&shaderMulLighting);
@@ -442,6 +448,33 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		std::cout << "Failed to load texture" << std::endl;
 	// Libera la memoria de la textura
 	textureHighway.freeImage(bitmap);
+
+	// Textura para pista
+	Texture textLandingPad("../Textures/landingPad.jpg");
+	// Cargando imagen
+	bitmap = textLandingPad.loadImage();
+	// Convertir a arreglo unidimensional
+	data = textLandingPad.convertToData(bitmap, imageWidth, imageHeight);
+	// Creando textura
+	glGenTextures(1, &texturelandingPadID);
+	// Enlazando textura
+	glBindTexture(GL_TEXTURE_2D, texturelandingPadID);
+	// Configurar wrapping
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	// Verificando
+	if (data) {
+		// Si no es nula, se transfiere a memoria
+		// Args: Tipo textura, Mipmaps, Formato interno de openGL, Ancho, Alto, referencia a Mipmaps, formato interno de la libreria, tipo de dato, apuntador a datos
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0, GL_BGRA, GL_UNSIGNED_BYTE, data);
+	}
+	else
+		std::cout << "Failed to load texture" << std::endl;
+	textLandingPad.freeImage(bitmap);
+
+
 }
 
 void destroy() {
@@ -827,6 +860,29 @@ void applicationLoop() {
 		boxHighway.setPosition(glm::vec3(0.0, 0.05, -35.0));
 		boxHighway.setOrientation(glm::vec3(0.0, 0.0, 0.0));
 		boxHighway.render();
+		
+		// Nueva Esfera
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureWindowID);
+		sphere2.setScale(glm::vec3(5.0, 5.0, 5.0));
+		sphere2.setPosition(glm::vec3(8.0, 7.0, -6.0));
+		sphere2.render();
+		glBindTexture(GL_TEXTURE_2D, 0);
+		// Otra Esfera
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureHighwayID);
+		sphere2.setScale(glm::vec3(3.0, 3.0, 3.0));
+		sphere2.setPosition(glm::vec3(10.0, 0.0, 10.0));
+		sphere2.render();
+		glBindTexture(GL_TEXTURE_2D, 0);
+		
+		// Landing pad
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texturelandingPadID);
+		boxLandingPad.setScale(glm::vec3(10.0, 0.5, 10.0));
+		boxLandingPad.setPosition(glm::vec3(5.0, 0.05, -5.0));
+		boxLandingPad.render();
+		glBindTexture(GL_TEXTURE_2D, 0);
 
 		/*******************************************
 		 * Custom objects obj
